@@ -59,7 +59,7 @@ function App() {
       <div className="chat-messages">
         {messages.map((message, index) => (
           <div key={index} className={`message ${message.role}`}>
-            <strong>{message.role === 'user' ? 'You' : 'Assistant'}</strong>
+            <strong>{message.role === 'user' ? 'You' : 'http://localhost:5173/'}</strong>
             {message.content}
           </div>
         ))}
@@ -97,3 +97,8 @@ function App() {
 }
 
 export default App;
+<<<<<<< Updated upstream
+=======
+
+// some sort
+>>>>>>> Stashed changes
