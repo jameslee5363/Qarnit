@@ -101,6 +101,10 @@ export default App;
 =======
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+// some sort
+>>>>>>> Stashed changes
+=======
 // some sort
 >>>>>>> Stashed changes
 =======
