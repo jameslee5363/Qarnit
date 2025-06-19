@@ -35,7 +35,7 @@ class DatabaseManager:
     """
     
     def __init__(self):
-        self.db_path = "dataset/PO_example.db"
+        self.db_path = "dataset/synthetic_po.db"
 
     def get_schema(self) -> str:
         """Retrieve the database schema as a string."""

@@ -39,7 +39,7 @@ class RetrieverAgent(Agent):
                 schema=self.schema,
                 parsed=state.parsed_question,
                 question=state.question,
-                issues=issues
+                issues=issues or ""
             )
 
             state.sql_query = self._strip_markdown_fences(state.sql_query)
@@ -61,7 +61,7 @@ class RetrieverAgent(Agent):
 
         # 6) Execute & load when valid
         if state.sql_valid:
-            result = self.db_manager.execute_query(state.sql_query)
+            result = self.db_manager.execute_query(state.sql_query or "")
             if "error" in result:
                 state.raw_results  = []
                 state.retrieved_df = pd.DataFrame()
@@ -140,7 +140,7 @@ class RetrieverAgent(Agent):
         resp = self.llm_manager.invoke(prompt, question=question, schema=schema)
         return JsonOutputParser().parse(resp)
 
-    def _build_sql(self, schema: str, parsed: dict, question: str, issues: str = None) -> str:
+    def _build_sql(self, schema: str, parsed: dict, question: str, issues: str) -> str:
         """
         If `issues` is None: generate fresh SQL from question + parsed.
         If `issues` is nonempty: ask the LLM to correct the prior SQL
@@ -161,13 +161,13 @@ class RetrieverAgent(Agent):
         Answer: SELECT * FROM `procurement_orders` WHERE `Created on` = MIN(`Created on`)
 
         2. Who is the supplier of any transaction that is greater than 1000 USD. 
-        Answer: SELECT * FROM procurement_orders WHERE \`Amount, USD\` > 1000.
+        Answer: SELECT * FROM procurement_orders WHERE `Amount, USD` > 1000.
 
         3. Who are the most frequent initiator of the transaction and what is the total amount they have initiated?
-        Answer: SELECT \`Created by\`, SUM(\`Amount, USD\`) AS total_amount_usd, SUM(\`Amount, Local\`) AS total_amount_local, COUNT(\`Created by\`) AS num_transaction FROM procurement_orders GROUP BY \`Created by\`ORDER BY num_transaction DESC;
+        Answer: SELECT `Created by`, SUM(`Amount, USD`) AS total_amount_usd, SUM(`Amount, Local`) AS total_amount_local, COUNT(`Created by`) AS num_transaction FROM procurement_orders GROUP BY `Created by`ORDER BY num_transaction DESC;
 
         4. Do you find any relationship between approver and creator?
-        Answer: SELECT \`Approved by\`, \`Created by\`, COUNT(\`PO Name\`) AS app_crt_pair_count FROM procurement_orders GROUP BY \`Approved by\`, \`Created by\`
+        Answer: SELECT `Approved by`, `Created by`, COUNT(`PO Name`) AS app_crt_pair_count FROM procurement_orders GROUP BY `Approved by`, `Created by`
         '''),
                 ("human", '''
         ===Database schema:
@@ -207,7 +207,7 @@ class RetrieverAgent(Agent):
          
         - Ensure all table and column names are correctly spelled and exist in the schema. All the table and column names should be enclosed in backticks.
         - If the SQL is valid, set "valid": true and both other fields null.
-        - If it’s invalid, set "valid": false, explain the issues in "issues", and supply a fixed SQL in "corrected_query".
+        - If it's invalid, set "valid": false, explain the issues in "issues", and supply a fixed SQL in "corrected_query".
         
         For example:
         1. {{
@@ -219,7 +219,7 @@ class RetrieverAgent(Agent):
         2. {{
             "valid": false,
             "issues": "Column random does not exist",
-            "corrected_query": "SELECT * FROM \`procurement_orders\` WHERE random > '08-01-2023'"
+            "corrected_query": "SELECT * FROM `procurement_orders` WHERE random > '08-01-2023'"
         }}
         '''),
                 ("human", '''
