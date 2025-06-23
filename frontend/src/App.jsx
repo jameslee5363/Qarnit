@@ -57,12 +57,28 @@ function App() {
     <div className="chat-container">
       <h1>AI Chat Assistant</h1>
       <div className="chat-messages">
-        {messages.map((message, index) => (
-          <div key={index} className={`message ${message.role}`}>
-            <strong>{message.role === 'user' ? 'You' : 'http://localhost:5173/'}</strong>
-            {message.content}
-          </div>
-        ))}
+        {messages.map((message, index) => {
+          // If this is the last assistant message, animate it
+          if (
+            message.role === 'assistant' &&
+            index === messages.length - 1
+          ) {
+            return (
+              <div key={index} className={`message assistant fade-in-down`}>
+                <strong>Assistant</strong>
+                <span>{message.content}</span>
+              </div>
+            );
+          }
+          // Render all other messages normally
+          return (
+            <div key={index} className={`message ${message.role}`}>
+              <strong>{message.role === 'user' ? 'You' : 'Assistant'}</strong>
+              {message.content}
+            </div>
+          );
+        })}
+        {/* Show typing indicator if waiting for response */}
         {isLoading && (
           <div className="message assistant">
             <strong>Assistant</strong>
