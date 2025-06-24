@@ -1,6 +1,6 @@
-from .agent import Agent
-from .state import AgentState
-from .llm_manager import LLMManager
+from agent import Agent
+from state import AgentState
+from llm_manager import LLMManager
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 import pandas as pd
@@ -19,7 +19,7 @@ class PreprocessorAgent(Agent):
 
     def run(self, state: AgentState) -> AgentState:
         # Retrieve DataFrame from state
-        df: pd.DataFrame = state.retrieved_df
+        df: pd.DataFrame = state.retrieved_df or pd.DataFrame()
         if df is None:
             state.add_message("⚠️ No DataFrame found to preprocess. Please load or retrieve a DataFrame first.")
             return state
@@ -98,7 +98,7 @@ class PreprocessorAgent(Agent):
         suggestions = self.llm_manager.invoke(prompt)
         return suggestions.strip()
 
-# 
+
     def parse_preprocessing_instructions(self, user_instructions: str, df: pd.DataFrame) -> dict:
         """
         Sends the user's instructions to the LLM to produce *Python code* that modifies the DataFrame.

@@ -11,7 +11,7 @@ class AgentState:
     data: Dict[str, Any] = field(default_factory=dict)
 
     # Collected messages or outputs from agents
-    messages: List[str] = field(default_factory=list)
+    messages: List[str] = field(default_factory=list) # idk
 
     # Retriever outputs
     is_relevant: Optional[bool] = None
