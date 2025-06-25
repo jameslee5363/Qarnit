@@ -6,7 +6,6 @@ from config.llm_config import llm
 _tools = make_sql_tools()
 _get_schema_tool = next(t for t in _tools if t.name == "sql_db_schema")
 
-
 def call_get_schema(state):
     """
     Sub-agent: lets the LLM generate and execute a schema tool call.

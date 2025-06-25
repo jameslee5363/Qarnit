@@ -3,6 +3,8 @@ from config.db_config import DB_PATH
 from langchain_core.messages import AIMessage
 from database.sql_toolkit import make_sql_tools
 from config.llm_config import llm
+import pandas as pd
+import json
 
 # prompt for generating queries
 _generate_query_system_prompt = """

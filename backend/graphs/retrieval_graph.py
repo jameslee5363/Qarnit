@@ -1,12 +1,9 @@
-
-
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, START, END, MessagesState
 from agents.retriever import (
     list_tables, call_get_schema, generate_query, check_query, should_continue
 )
 from database.sql_toolkit import make_sql_tools
-
 
 def build_retriever_agent_graph():
     tools = make_sql_tools()
