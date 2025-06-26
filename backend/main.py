@@ -102,7 +102,6 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     try:
         db.commit()
     except IntegrityError:
-        # in case the DB-level unique constraint fires first
         db.rollback()
         raise HTTPException(status_code=400, detail="Username or email already exists")
     return {"message": "Registration successful"}
