@@ -42,9 +42,9 @@
 }
 
 :root {
-  --primary-purple: #6B46C1;
-  --light-purple: #9F7AEA;
-  --lighter-purple: #E9D8FD;
+  --primary-blue: #38BDF8;         /* Turquoise Blue (Cyan-400) */
+  --light-blue: #67E8F9;           /* Light Turquoise (Cyan-300) */
+  --lighter-blue: #CFFAFE;         /* Very Light Turquoise (Cyan-100) */
   --white: #FFFFFF;
   --gray-100: #F7FAFC;
   --gray-200: #EDF2F7;
@@ -84,7 +84,7 @@ body {
 }
 
 h1 {
-  color: var(--primary-purple);
+  color: var(--primary-blue);
   text-align: center;
   padding: 1rem;
   font-size: 1.5rem;
@@ -126,7 +126,7 @@ h1 {
 }
 
 .message.user {
-  background-color: var(--primary-purple);
+  background-color: var(--primary-blue);
   color: var(--white);
   margin-left: auto;
   border-bottom-right-radius: 4px;
@@ -177,13 +177,13 @@ h1 {
 
 .chat-input:focus {
   outline: none;
-  border-color: var(--light-purple);
-  box-shadow: 0 0 0 3px rgba(159, 122, 234, 0.2);
+  border-color: var(--light-blue);
+  box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.2);
 }
 
 .send-button {
   padding: 12px 24px;
-  background-color: var(--primary-purple);
+  background-color: var(--primary-blue);
   color: var(--white);
   border: none;
   border-radius: 12px;
@@ -198,7 +198,7 @@ h1 {
 }
 
 .send-button:hover {
-  background-color: var(--light-purple);
+  background-color: var(--light-blue);
   transform: translateY(-1px);
 }
 
@@ -216,7 +216,7 @@ h1 {
 .typing-indicator span {
   width: 8px;
   height: 8px;
-  background-color: var(--primary-purple);
+  background-color: var(--primary-blue);
   border-radius: 50%;
   animation: typing 1s infinite ease-in-out;
 }
@@ -265,12 +265,12 @@ h1 {
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-  background: var(--light-purple);
+  background: var(--light-blue);
   border-radius: 3px;
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-purple);
+  background: var(--primary-blue);
 }
 
 /* Fade in from top to bottom for assistant message */
