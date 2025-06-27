@@ -12,7 +12,7 @@ SECRET_KEY = "yoursecretkey"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Password hasher
+# Password hash
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Dependency to get DB session

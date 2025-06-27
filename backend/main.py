@@ -39,7 +39,7 @@ chat_history: List[ChatMessage] = []
 
 class RegisterRequest(BaseModel):
     username: str
-    email: EmailStr        # ← new: ensures valid email format
+    email: EmailStr       
     password: str
     confirm_password: str
 

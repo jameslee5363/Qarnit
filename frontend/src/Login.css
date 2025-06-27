@@ -1,40 +1,111 @@
 .login-container {
     max-width: 400px;
     margin: 80px auto;
-    padding: 2rem;
-    background-color: #f9f9f9;
-    border-radius: 12px;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem;
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
   }
   
   .login-container h2 {
     text-align: center;
-    margin-bottom: 1.5rem;
-    color: #333;
+    margin-bottom: 2rem;
+    color: #1f2937;
+    font-size: 1.875rem;
+    font-weight: 600;
   }
   
   .login-container input {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.875rem 1rem;
     margin: 0.5rem 0 1rem;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
     font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+  }
+  
+  .login-container input:focus {
+    outline: none;
+    border-color: #67E8F9;
+    box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.1);
   }
   
   .login-container button {
     width: 100%;
-    padding: 0.75rem;
-    background-color: #67E8F9;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, #67E8F9 0%, #38BDF8 100%);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    box-shadow: 0 4px 12px rgba(103, 232, 249, 0.3);
   }
   
   .login-container button:hover {
-    background-color: #38BDF8;
+    background: linear-gradient(135deg, #38BDF8 0%, #0EA5E9 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(103, 232, 249, 0.4);
+  }
+  
+  .login-container button:active {
+    transform: translateY(0);
+  }
+  
+  .link-container {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .link-container a {
+    color: #67E8F9;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .link-container a:hover {
+    color: #38BDF8;
+    text-decoration: underline;
+  }
+  
+  .message {
+    margin-top: 1rem;
+    text-align: center;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+  
+  .message.success {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+  
+  .message.error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #374151;
+    font-weight: 500;
+    font-size: 0.875rem;
   }
   
