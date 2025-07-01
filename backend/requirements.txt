@@ -15,3 +15,6 @@ uvicorn==0.34.3
 langchain-core==0.3.65
 langchain-openai==0.3.23
 pandas==2.3.0
+langchain-community==0.3.23
+sqlalchemy==2.0.39
+langgraph==0.3.10
