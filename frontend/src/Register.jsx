@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
-import './Login.css';
+import "./styles/Login.css";
+
 import { Link } from "react-router-dom";
 
 function Register({ onRegister }) {
@@ -57,7 +58,7 @@ function Register({ onRegister }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="login-container">
+    <form onSubmit={handleSubmit} className="auth-card">
       <h2>Create Account</h2>
       
       <div className="form-group">

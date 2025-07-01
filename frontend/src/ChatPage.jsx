@@ -1,59 +1,63 @@
 import { useState, useEffect, useRef } from "react";
+import {
+  useParams,
+  useNavigate,
+  useOutletContext,
+  Routes,
+  Route,
+  NavLink,
+} from "react-router-dom";
 import axios from "axios";
-import "./App.css";            // (optional) extract chat-only styles
+import "./styles/App.css";      // chat-specific styles
 
-function ChatPage({ token, onLogout }) {
-  // --- Chat state (exactly what you had) ---
-  const [messages, setMessages]   = useState([]);
-  const [input, setInput]         = useState("");
-  const [loading, setLoading]     = useState(false);
-  const endRef                    = useRef(null);
+/* ---------- MESSAGES TAB ---------- */
+function MessagesView({ convId, token }) {
+  const [messages, setMessages] = useState([]);
+  const [input,    setInput]    = useState("");
+  const [loading,  setLoading]  = useState(false);
+  const endRef                 = useRef(null);
+  const navigate               = useNavigate();
 
-  // Scroll on new msg
+  /* load history whenever convId changes */
+  useEffect(() => {
+    if (!token || !convId) return;
+    axios
+      .get(`http://localhost:8000/api/conversations/${convId}/messages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setMessages(res.data))
+      .catch((err) => {
+        console.error("History:", err);
+        if (err?.response?.status === 404) navigate("/chat");
+      });
+  }, [convId, token, navigate]);
+
   useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
 
-  // Pull history on mount
-  useEffect(() => {
-    if (!token) return;
-    axios
-      .get("http://localhost:8000/api/chat/history", {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(res => setMessages(res.data))
-      .catch(err => console.error("History:", err));
-  }, [token]);
-
-  const send = async (e) => {
+  /* send a message */
+  async function send(e) {
     e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userMsg = { role: "user", content: input };
-    setInput("");
+    if (!input.trim()) return;
     setLoading(true);
-
+    setMessages((prev) => [...prev, { role: "user", content: input }]);
     try {
-      const res = await axios.post("http://localhost:8000/api/chat", userMsg, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setMessages((prev) => [...prev, userMsg, res.data]);
+      const res = await axios.post(
+        `http://localhost:8000/api/conversations/${convId}/messages`,
+        { role: "user", content: input }, // Add role here
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setMessages((prev) => [...prev, res.data]);
     } catch (err) {
       console.error("Send:", err);
     } finally {
       setLoading(false);
+      setInput("");
     }
-  };
+  }
 
   return (
-    <div className="chat-container">
-      <header className="chat-header">
-        <h1>AI Chat Assistant</h1>
-        <button className="logout-button" onClick={onLogout}>Logout</button>
-      </header>
-
-      <div className="chat-messages">
+    <div className="messages-view">
+      <div className="messages-list">
         {messages.map((m, i) => (
           <div
             key={i}
@@ -69,25 +73,25 @@ function ChatPage({ token, onLogout }) {
         {loading && (
           <div className="message assistant">
             <strong>Assistant</strong>
-            <div className="typing-indicator"><span/><span/><span/></div>
+            <div className="typing-indicator">
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
         )}
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={send} className="chat-input-form">
+      <form onSubmit={send} className="composer">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="chat-input"
+          placeholder="Type your message…"
+          className="composer-input"
           disabled={loading}
         />
-        <button
-          type="submit"
-          className="send-button"
-          disabled={loading || !input.trim()}
-        >
+        <button type="submit" className="btn-send" disabled={loading || !input.trim()}>
           Send
         </button>
       </form>
@@ -95,4 +99,23 @@ function ChatPage({ token, onLogout }) {
   );
 }
 
-export default ChatPage;
+/* ---------- MAIN CHAT PAGE ---------- */
+export default function ChatPage() {
+  const { convId } = useParams();
+  const { token, onLogout } = useOutletContext();
+
+  return (
+    <div className="chat-container">
+      {/* tiny tab-style menu */}
+
+      {/* nested routes render inside <main> */}
+      <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <Routes>
+          <Route index      element={<MessagesView convId={convId} token={token} />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+// <button onClick={onLogout} className="logout-btn">Logout</button>
