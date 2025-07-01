@@ -5,6 +5,12 @@ from agents.retriever import (
 )
 from database.sql_toolkit import make_sql_tools
 
+'''Flow diagram:
+        START → list_tables → call_get_schema → get_schema (tool)
+            → generate_query ──┬──[END if no tool calls]──────────────► END
+                               └── check_query → run_query (tool) ─┐
+                                                                   └──────────► generate_query (loop)'''
+
 def build_retriever_agent_graph():
     tools = make_sql_tools()
     get_schema_tool = next(t for t in tools if t.name == "sql_db_schema")

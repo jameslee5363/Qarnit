@@ -1,116 +1,57 @@
-import { useEffect, useState, useRef } from 'react';
-import './App.css';
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import Login    from "./Login";
+import Register from "./Register";
+import ChatPage from "./ChatPage";
+
+// Small wrapper to protect /chat
+function RequireAuth({ children }) {
+  const token = localStorage.getItem("token");
+  return token ? children : <Navigate to="/login" replace />;
+}
 
 function App() {
-  const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // ---- Auth helpers ----
+  const handleLogin = (newTok) => {
+    localStorage.setItem("token", newTok);
+    setToken(newTok);
+    navigate("/chat");
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    // Load chat history when component mounts
-    fetch("http://localhost:8000/api/chat/history")
-      .then((res) => res.json())
-      .then((data) => setMessages(data))
-      .catch((error) => console.error("Failed to load chat history:", error));
-  }, []);
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
-
-    const newMessage = {
-      role: "user",
-      content: inputMessage
-    };
-
-    setIsLoading(true);
-    setInputMessage("");
-
-    try {
-      const response = await fetch("http://localhost:8000/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newMessage),
-      });
-
-      const data = await response.json();
-      setMessages(prev => [...prev, newMessage, data]);
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    navigate("/login", { replace: true });
   };
 
   return (
-    <div className="chat-container">
-      <h1>AI Chat Assistant</h1>
-      <div className="chat-messages">
-        {messages.map((message, index) => {
-          // If this is the last assistant message, animate it
-          if (
-            message.role === 'assistant' &&
-            index === messages.length - 1
-          ) {
-            return (
-              <div key={index} className={`message assistant fade-in-down`}>
-                <strong>Assistant</strong>
-                <span>{message.content}</span>
-              </div>
-            );
-          }
-          // Render all other messages normally
-          return (
-            <div key={index} className={`message ${message.role}`}>
-              <strong>{message.role === 'user' ? 'You' : 'Assistant'}</strong>
-              {message.content}
-            </div>
-          );
-        })}
-        {/* Show typing indicator if waiting for response */}
-        {isLoading && (
-          <div className="message assistant">
-            <strong>Assistant</strong>
-            <div className="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      <form onSubmit={sendMessage} className="chat-input-form">
-        <input
-          type="text"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          placeholder="Type your message..."
-          className="chat-input"
-          disabled={isLoading}
-        />
-        <button 
-          type="submit" 
-          className="send-button"
-          disabled={isLoading || !inputMessage.trim()}
-        >
-          Send
-        </button>
-      </form>
-    </div>
+    <Routes>
+      <Route path="/" element={<Navigate to="/chat" />} />
+
+      <Route path="/login"
+        element={<Login  onLogin={handleLogin} />}
+      />
+
+      <Route path="/register"
+        element={<Register />}
+      />
+
+      <Route
+        path="/chat"
+        element={
+          <RequireAuth>
+            <ChatPage token={token} onLogout={handleLogout} />
+          </RequireAuth>
+        }
+      />
+
+      {/* catch-all for bad URLs */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
 export default App;
-
