@@ -1,35 +1,37 @@
 import pandas as pd
 from langchain_core.messages import AIMessage
+from agents.preprocessor.complexity_assessor import assess_complexity
+from agents.preprocessor.df_inspector import inspect_df
 
-def execute_code(state):
+def execute_code(df, code):
     """
-    Execute the generated Python preprocessing code from state.data['generated_code']
-    on the DataFrame stored in state.data['df'], then update state.data['df'].
-    Returns an AIMessage confirming success or reporting errors.
+    Execute the generated Python preprocessing code
+    on the DataFrame.
     """
-    df = state.data.get("df")
-    code = state.data.get("generated_code")
-
     if df is None:
-        return {"messages": [AIMessage(content="⚠️ No DataFrame available for preprocessing.")]}
+        return "Error: no DataFrame provided to execute code on."
 
     if not code:
-        return {"messages": [AIMessage(content="⚠️ No preprocessing code found to apply.")]}
+        return "Error: no code provided to execute."
+
+    # Guard-rail check
+    context = inspect_df(df).get("context", {})
+    safe, warning = assess_complexity(code, context)
+    if not safe:
+        return {"df": None, "error": f"Unsafe code detected: {warning}"}
 
     # Execute the generated code in a controlled local environment
     local_env = {"df": df}
     try:
         exec(code, {}, local_env)
         new_df = local_env.get("df")
+        # Validate output
         if not isinstance(new_df, pd.DataFrame):
-            raise RuntimeError("Executed code did not return a DataFrame named 'df'.")
-        # Update state with the new DataFrame
-        state.data["df"] = new_df
-        return {"messages": [AIMessage(content="✅ Successfully applied preprocessing code.")]}
+            return {
+                "df": None,
+                "error": "Executed code did not yield a DataFrame named 'df'."
+            }
+        return {"df": new_df, "error": None}
+
     except Exception as e:
-        return {"messages": [AIMessage(content=f"❌ Error executing preprocessing code: {e}")]}
-
-
-
-
-
+        return {"df": None, "error": f"Error executing preprocessing code: {e}"}

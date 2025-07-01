@@ -2,24 +2,21 @@ from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from config.llm_config import llm
 from agents.preprocessor.df_inspector import inspect_df
+import json
 
-def suggest_preprocessing(state):
+def suggest_preprocessing(df) -> str:
     """
-    Suggest cleaning steps based on the DataFrame in state.data['df'], 
-    using df_inspector for DRY context gathering.
+    Suggest cleaning steps based on the DataFrame, using df_inspector for DRY context gathering.
     """
     # Gather context via the inspector
-    context = inspect_df(state).get("context", {})
+    context = inspect_df(df).get("context", {})
     if not context:
-        return {"messages": [AIMessage(content="⚠️ No DataFrame to preprocess.")]}
+        return "Error: no context found to generate preprocessing suggestions."
 
-    columns = context["columns"]
-    dtypes = context["dtypes"]
-    sample = context["sample"]
-
-    # Prepare strings and escape braces for the prompt
-    dtypes_str = str(dtypes).replace("{", "{{").replace("}", "}}")
-    sample_str = str(sample).replace("{", "{{").replace("}", "}}")
+    # Extract context & prepare strings
+    cols_str = ", ".join(context["columns"])
+    dtypes_str = "\n".join(f"{col}: {dtype}" for col, dtype in context["dtypes"].items())
+    sample_str = json.dumps(context["sample"], indent=2)
 
     # Build a clear system + human prompt
     prompt = ChatPromptTemplate.from_messages([
@@ -34,9 +31,10 @@ def suggest_preprocessing(state):
         ),
         (
             "human",
-            f"Columns: {columns}\nTypes: {dtypes_str}\nSample rows: {sample_str}\nWhat preprocessing steps do you suggest?"
+            "Columns: {cols_str}\nTypes: {dtypes_str}\nSample rows: {sample_str}\nWhat preprocessing steps do you suggest?"
         )
     ])
 
-    response = llm.invoke(prompt)
-    return {"messages": [AIMessage(content=response.strip())]}
+    formatted_prompt = prompt.format_messages(cols_str=cols_str, dtypes_str=dtypes_str, sample_str=sample_str)
+    response = llm.invoke(formatted_prompt)
+    return str(response.content)
