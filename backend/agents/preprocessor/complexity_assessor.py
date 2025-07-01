@@ -1,5 +1,10 @@
 import re
 
+"""this is pretty much hardcoded for now,
+    we'll probably need to make an api call ,
+    make the LLM do some reasoning steps on the generated code,
+    then calculate the complexity (in time and space) """
+
 def assess_complexity(code: str, context: dict, max_cardinality: int = 100):
     """
     Guard-rail against memory-bloat operations.
