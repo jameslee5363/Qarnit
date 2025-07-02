@@ -37,12 +37,12 @@ def build_retriever_graph():
     
     # Conditional edges from generate_query
     builder.add_conditional_edges(
-        "generate_query", 
-        should_continue,
-        {
-            "check_query": "check_query",
-            "end": END
-        }
+    "generate_query", 
+    should_continue,
+    {
+        "check_query": "check_query",
+        "__end__": END
+    }
     )
     
     builder.add_edge("check_query", "run_query")

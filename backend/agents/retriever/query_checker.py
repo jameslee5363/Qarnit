@@ -36,9 +36,9 @@ def check_query(state) -> dict[str, list[AIMessage]]:
     response.id = state["messages"][-1].id
     return {"messages": [response]}
 
-def should_continue(state) -> Literal[END, "check_query"]:
+def should_continue(state) -> Literal["__end__", "check_query"]:
     """Determines whether to re-enter the check_query step or finish."""
     last_message = state["messages"][-1]
     if not getattr(last_message, "tool_calls", None):
-        return END
+        return "__end__"
     return "check_query"
