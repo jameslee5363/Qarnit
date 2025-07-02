@@ -1,0 +1,29 @@
+import pathlib
+from abc import abstractmethod
+from llm_manager.message import Message
+from llm_manager.cython import CythonBaseModel
+from pydantic import BaseModel, Field
+from typing import Any
+
+class ToolModel(CythonBaseModel):
+    @classmethod
+    def to_schema(cls) -> dict[str, Any]: ...
+    @classmethod
+    def to_json_schema(cls) -> str: ...
+    @abstractmethod
+    def __call__(self, *args, **kwargs) -> Any: ...
+
+class CodeInterpreter(ToolModel):
+    code: str = Field(description="Please provide the Python code to be executed")
+    requirements: list[str] = Field(default_factory=list, description="List of dependencies to be installed via pip")
+    timeout: int = Field(default=300, description="The maximum execution timeout in seconds")
+    def _install_requirements(self, work_dir: pathlib.Path, result: dict[str, Any]) -> bool: ...
+    def __call__(self) -> str: ...
+
+class Tools(BaseModel):
+    schemas: list[dict[str, Any]]
+    namespace: dict[str, type[ToolModel]]
+    def __init__(self, *models: type[ToolModel]) -> None: ...
+    def __call__(self, tool_calls: list[dict[str, Any]]) -> list[Message]: ...
+    def __add__(self, other: "Tools") -> "Tools": ...
+    def __bool__(self) -> bool: ...

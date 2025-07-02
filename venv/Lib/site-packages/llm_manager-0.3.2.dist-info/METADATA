@@ -1,0 +1,189 @@
+Metadata-Version: 2.4
+Name: llm-manager
+Version: 0.3.2
+Summary: Flash-built LLM workflows
+Author: Bigollo
+Description-Content-Type: text/markdown
+Requires-Dist: portalocker
+Requires-Dist: cryptography
+Requires-Dist: pydantic
+Requires-Dist: requests
+Dynamic: author
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: requires-dist
+Dynamic: summary
+
+# llm-manager 大模型应用开发
+
+## 简介
+
+llm-manager是一个用于快速开发大模型应用的Python包。内置工具：CodeInterpreter。
+
+## 依赖性
+
+##### 基础依赖（安装llm-manager时将自动安装）：
+
+- portalocker
+- cryptography
+- pydantic
+- requests
+
+## 安装
+
+```shell
+# 通过 pip 安装：
+pip install llm-manager
+```
+
+## 配置操作
+
+1. #### 模型配置写入
+
+```python
+from llm_manager.config import EnvConfig
+
+# 配置名为 'qwen' 的大模型
+EnvConfig.write("qwen", endpoint_url="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", api_key={API_KEY})
+
+# 配置名为 'deepseek' 的大模型
+EnvConfig.write("deepseek", endpoint_url="https://api.deepseek.com/chat/completions", api_key={API_KEY})
+```
+
+2. #### 应用配置写入
+
+```python
+from llm_manager.config import EnvConfig
+
+# 应用名为 'chat' 的大模型配置
+EnvConfig.write("chat", llm="deepseek", model="deepseek-chat", temperature=0.9, top_p=0.95, stream=True)
+
+# 应用名为 'qwen-vl' 的大模型配置
+EnvConfig.write("qwen-vl", llm="qwen", model="qwen-vl-max-latest", stream=True)
+
+# 读取全部配置文件信息
+all_config = EnvConfig.read()
+```
+
+## 工具开发
+
+tools.py文件内容
+
+```python
+import datetime
+from typing import Any
+
+from llm_manager.tools import ToolModel
+
+
+# 自动生成schema
+class GetCurrentDate(ToolModel):
+    """获取当前日期"""
+
+    def __call__(self) -> dict[str, Any]:
+        now = datetime.datetime.now()
+        return {"isoformat": now.isoformat(), "isoweekday": now.isoweekday()}
+
+
+# 自定义schema
+class GetCurrentDate(ToolModel):
+
+    @classmethod
+    def to_schema(cls) -> dict[str, Any]:
+        return {
+            "type": "function",
+            "function": {
+                "name": "GetCurrentDate",
+                "description": "获取当前日期"
+            }
+        }
+
+    def __call__(self) -> dict[str, Any]:
+        now = datetime.datetime.now()
+        return {"isoformat": now.isoformat(), "isoweekday": now.isoweekday()}
+```
+
+## chat应用开发
+
+chat/model.py文件内容
+
+```python
+from llm_manager.model import TLModel
+from llm_manager.tools import Tools
+
+from tools import GetCurrentDate
+
+
+class LLMChat(TLModel):
+    _raw: bool = True  # 保持完整输出数据结构（默认False，只输出模型回复）
+    _tools: Tools = Tools(GetCurrentDate)
+
+    content: str
+
+    @property
+    def _section(self) -> str:
+        return "chat"
+```
+chat/prompt.py文件内容
+
+```python
+SYSTEM = """You are a helpful assistant."""
+
+USER = """{content}"""
+```
+
+## chat应用示例
+
+```python
+from chat.model import LLMChat
+
+chat = LLMChat(content="还有几天周末放假？")
+for chunk in chat.run():
+    print(chunk)
+for chunk in chat.run(content="周末旅游地点推荐"):
+    print(chunk)
+```
+
+## OCR应用开发
+
+ocr/model.py文件内容
+
+```python
+from llm_manager.model import VLModel
+
+
+class VLMOCR(VLModel):
+
+    @property
+    def _section(self) -> str:
+        return "qwen-vl"
+```
+
+ocr/prompt.py文件内容
+
+```python
+SYSTEM = """You are an AI specialized in recognizing and extracting text from images. Your mission is to analyze the image document and generate the result in QwenVL Document Parser HTML format using specified tags while maintaining user privacy and data integrity."""
+
+USER = """QwenVL HTML"""
+```
+
+## OCR应用示例
+
+```python
+import base64
+import pathlib
+
+from ocr.model import VLMOCR
+
+
+def encode_image(filepath: str) -> str:
+    with open(filepath, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+
+vlm_ocr = VLMOCR(images=[encode_image("document.png")])
+
+for chunk in vlm_ocr.run():
+    print(chunk, end="")
+```
+

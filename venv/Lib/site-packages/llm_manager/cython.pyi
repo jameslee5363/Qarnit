@@ -1,0 +1,6 @@
+from pydantic import BaseModel
+
+class CythonModelMeta(type(BaseModel)):
+    def __new__(cls, name, bases, namespace) -> type(BaseModel): ...
+
+class CythonBaseModel(BaseModel): ...
