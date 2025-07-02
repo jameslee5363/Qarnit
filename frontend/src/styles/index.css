@@ -1,0 +1,19 @@
+@import "./variables.css";
+
+/* ---- reset & globals ---- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* subtle ambient gradient */
+  background: linear-gradient(135deg, #e0f7fa 0%, #fff 100%);
+  color: var(--gray-800);
+}
+
+/* global links */
+a       { color: var(--primary-blue); text-decoration: none; }
+a:hover { text-decoration: underline; }

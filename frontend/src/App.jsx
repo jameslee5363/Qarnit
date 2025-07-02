@@ -3,22 +3,21 @@ import { useState } from "react";
 import Login    from "./Login";
 import Register from "./Register";
 import ChatPage from "./ChatPage";
+import ConversationsLayout from "./ConversationsLayout";
 
-// Small wrapper to protect /chat
-function RequireAuth({ children }) {
-  const token = localStorage.getItem("token");
+// Protect /chat routes
+function RequireAuth({ token, children }) {
   return token ? children : <Navigate to="/login" replace />;
 }
 
-function App() {
+export default function App() {
   const navigate = useNavigate();
   const [token, setToken] = useState(localStorage.getItem("token"));
 
-  // ---- Auth helpers ----
   const handleLogin = (newTok) => {
     localStorage.setItem("token", newTok);
     setToken(newTok);
-    navigate("/chat");
+    navigate("/chat", { replace: true });
   };
 
   const handleLogout = () => {
@@ -29,29 +28,41 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/chat" />} />
-
-      <Route path="/login"
-        element={<Login  onLogin={handleLogin} />}
-      />
-
-      <Route path="/register"
-        element={<Register />}
-      />
-
+      {/* root → chat or login */}
       <Route
-        path="/chat"
+        path="/"
+        element={token ? <Navigate to="/chat" replace /> : <Navigate to="/login" replace />}
+      />
+
+      {/* public */}
+      <Route path="/login"    element={<Login onLogin={handleLogin} />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* /chat/* keeps the sidebar from ConversationsLayout */}
+      <Route
+        path="/chat/*"
         element={
-          <RequireAuth>
-            <ChatPage token={token} onLogout={handleLogout} />
+          <RequireAuth token={token}>
+            <ConversationsLayout token={token} onLogout={handleLogout} />
           </RequireAuth>
+        }
+      >
+      {/* placeholder when no conversation selected */}
+      <Route
+        index
+        element={
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Select or start a conversation
+          </div>
         }
       />
 
-      {/* catch-all for bad URLs */}
+        {/* conversation — now with its own nested routes */}
+        <Route path=":convId/*" element={<ChatPage />} />
+      </Route>
+
+      {/* fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
-
-export default App;

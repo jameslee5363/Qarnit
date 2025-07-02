@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import './Login.css';
+import "./styles/Login.css";
 import { Link } from "react-router-dom";
 
 function Login({ onLogin }) {
@@ -28,7 +28,7 @@ function Login({ onLogin }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="login-container">
+    <form onSubmit={handleSubmit} className="auth-card">
       <h2>Welcome Back</h2>
       
       <div className="form-group">
