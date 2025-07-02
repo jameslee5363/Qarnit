@@ -1,0 +1,32 @@
+import os
+from dotenv import load_dotenv
+from langchain_openai import AzureChatOpenAI
+from pydantic import SecretStr
+
+load_dotenv()
+
+api_key = os.getenv("AZURE_OPENAI_API_KEY")
+azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+model = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+
+if api_key is None:
+    raise ValueError("AZURE_OPENAI_API_KEY environment variable is not set") 
+
+class LLMManager:
+    def __init__(self):
+        self.llm = AzureChatOpenAI(
+            azure_endpoint = azure_endpoint,
+            api_key = SecretStr(api_key),
+            model = model,
+            api_version = api_version
+        )
+
+    def invoke(self, prompt, **kwargs) -> str:
+        if hasattr(prompt, "format_messages"):
+            messages = prompt.format_messages(**kwargs)
+        else:
+            messages = [{"role": "user", "content": prompt}]
+            
+        response = self.llm.invoke(messages)
+        return response.content
