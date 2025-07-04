@@ -1,0 +1,6 @@
+PO Number,Supplier,Amount Local,Amount USD,Created On,Created By,Approved On,Approved By,Status,Fund Status,PO Source,Req No.,Req Approver,Req Approved On,Description
+PO001,Supplier A,1500.0,1500.0,2025-06-01,Alice Smith,2025-06-02,John Doe,Open,Active,Internal,RQ1001,Mike Ross,2025-06-02,Office supplies
+PO002,Supplier B,2750.5,2750.5,2025-06-05,Bob Johnson,2025-06-06,Jane Roe,Closed,Inactive,External,RQ1002,Rachel Zane,2025-06-06,Computer hardware
+PO003,Supplier C,3200.0,3200.0,2025-06-10,Carol Lee,2025-06-11,Jim Beam,Open,Active,Internal,RQ1003,Harvey Specter,2025-06-11,Software licenses
+PO004,Supplier D,425.75,425.75,2025-06-15,David Kim,2025-06-16,Jill Hill,Open,Active,External,RQ1004,Donna Paulsen,2025-06-16,Printer cartridges
+PO005,Supplier E,980.0,980.0,2025-06-20,Eva Chen,2025-06-21,Jack Black,Closed,Inactive,Internal,RQ1005,Louis Litt,2025-06-21,Conference catering
