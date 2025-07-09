@@ -1,8 +1,8 @@
 import pandas as pd
 from langchain_core.messages import AIMessage
-from backend.agents.preprocessor.complexity_assessor import assess_complexity
-from backend.agents.preprocessor.df_inspector import inspect_df
-from backend.agents.state import AppState
+from agents.preprocessor.complexity_assessor import assess_complexity
+from agents.preprocessor.df_inspector import inspect_df
+from agents.state import AppState
 
 def execute_code(state: AppState) -> AppState:
     """

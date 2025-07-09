@@ -1,5 +1,5 @@
-from backend.config.db_config import db
-from backend.config.llm_config import llm
+from config.db_config import db
+from config.llm_config import llm
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 
 def make_sql_tools():

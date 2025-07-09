@@ -1,9 +1,9 @@
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, START, END, MessagesState
-from backend.agents.retriever import (
+from agents.retriever import (
     list_tables, call_get_schema, generate_query, check_query, should_continue
 )
-from backend.dataTools.sql_toolkit import make_sql_tools
+from dataTools.sql_toolkit import make_sql_tools
 
 '''Flow diagram:
         START → list_tables → call_get_schema → get_schema (tool)

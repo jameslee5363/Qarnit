@@ -1,5 +1,5 @@
 import pandas as pd
-from backend.agents.state import AppState
+from agents.state import AppState
 
 def inspect_df(state: AppState) -> AppState:
     df = state.retrieved_df

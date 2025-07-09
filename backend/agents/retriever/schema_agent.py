@@ -1,6 +1,6 @@
 from langchain_core.messages import AIMessage
-from backend.dataTools.sql_toolkit import make_sql_tools
-from backend.config.llm_config import llm
+from dataTools.sql_toolkit import make_sql_tools
+from config.llm_config import llm
 
 # pull in schema and query tools
 _tools = make_sql_tools()

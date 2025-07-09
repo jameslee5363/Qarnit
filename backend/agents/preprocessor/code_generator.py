@@ -1,9 +1,9 @@
 import json
 from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from backend.config.llm_config import llm
-from backend.agents.preprocessor.df_inspector import inspect_df
-from backend.agents.state import AppState
+from config.llm_config import llm
+from agents.preprocessor.df_inspector import inspect_df
+from agents.state import AppState
 
 def generate_code(state: AppState) -> AppState:
     """

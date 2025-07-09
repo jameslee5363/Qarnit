@@ -7,9 +7,9 @@ from typing import Literal, Optional, Any
 import pandas as pd
 import re
 import ast
-from backend.agents.state import AppState
-from backend.graphs.retrieval_graph import build_retriever_graph
-from backend.graphs.preprocessor_graph import build_preprocessor_graph
+from agents.state import AppState
+from graphs.retrieval_graph import build_retriever_graph
+from graphs.preprocessor_graph import build_preprocessor_graph
 
 def extract_column_names_from_query(query: str) -> Optional[list]:
     """Extract column names from SQL SELECT statement"""

@@ -2,10 +2,10 @@ import sys
 import os
 import importlib
 
-retriever_preprocessor_module = importlib.import_module('backend.graphs.retriever-preprocessor_graph')
-build_data_pipeline = retriever_preprocessor_module.build_data_pipeline
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.agents.state import AppState
+from graphs.retriever_preprocessor_graph import build_data_pipeline
+from agents.state import AppState
 
 pipeline = build_data_pipeline()
 

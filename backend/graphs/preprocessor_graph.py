@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, START, END
-from backend.agents.state import AppState
-from backend.agents.preprocessor import (
+from agents.state import AppState
+from agents.preprocessor import (
     inspect_df,
     suggest_preprocessing,
     check_relevance,
