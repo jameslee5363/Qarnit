@@ -9,7 +9,7 @@ __pycache__/
 .DS_Store
 notebooks_for_trying-zou/
 venv/
-
+venv/
 # Python virtual environments
 venv/
 env/
