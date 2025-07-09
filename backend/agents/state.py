@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 import pandas as pd
 from typing import List, Optional, Any, Dict
 
@@ -19,6 +19,8 @@ class AppState(BaseModel):
       - applied: Whether preprocessing code was applied successfully (bool).
       - extras: Optional dict for any other important variables.
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True) #if you encounter a type you don't recognize, just accept it as-is without trying to validate or serialize it.(to handle pydantic errors)
+    
     messages: List[Dict[str, Any]] = Field(default_factory=list)
     data: Dict[str, Any] = Field(default_factory=dict)
     initial_question: Optional[str] = None

@@ -1,8 +1,8 @@
-from config.db_config import db
-from config.db_config import DB_PATH
+from backend.config.db_config import db
+from backend.config.db_config import DB_PATH
 from langchain_core.messages import AIMessage
-from dataTools.sql_toolkit import make_sql_tools
-from config.llm_config import llm
+from backend.dataTools.sql_toolkit import make_sql_tools
+from backend.config.llm_config import llm
 import pandas as pd
 import json
 

@@ -1,8 +1,11 @@
 import pandas as pd
+from backend.agents.state import AppState
 
-def inspect_df(df):
+def inspect_df(state: AppState) -> AppState:
+    df = state.retrieved_df
     if df is None:
-        return {"context": {}}
+        state.data['context'] = {}
+        return state
 
     # Basic schema info
     columns = df.columns.tolist()
@@ -16,12 +19,13 @@ def inspect_df(df):
         for col in df.select_dtypes(include=["object", "category"]).columns
     }
 
-    return {
-        "context": {
-            "columns": columns,
-            "dtypes": dtypes,
-            "rows": rows,
-            "sample": sample,
-            "cardinalities": cardinalities,
-        }
+    context = {
+        "columns": columns,
+        "dtypes": dtypes,
+        "rows": rows,
+        "sample": sample,
+        "cardinalities": cardinalities,
     }
+    
+    state.data['context'] = context
+    return state

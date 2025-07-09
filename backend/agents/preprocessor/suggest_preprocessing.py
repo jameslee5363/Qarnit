@@ -1,17 +1,20 @@
 from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from config.llm_config import llm
-from agents.preprocessor.df_inspector import inspect_df
+from backend.config.llm_config import llm
+from backend.agents.preprocessor.df_inspector import inspect_df
+from backend.agents.state import AppState
 import json
 
-def suggest_preprocessing(df) -> str:
+def suggest_preprocessing(state: AppState) -> AppState:
     """
     Suggest cleaning steps based on the DataFrame, using df_inspector for DRY context gathering.
     """
     # Gather context via the inspector
-    context = inspect_df(df).get("context", {})
+    #state = inspect_df(state)
+    context = state.data.get("context", {})
     if not context:
-        return "Error: no context found to generate preprocessing suggestions."
+        state.set_preprocessing_suggestion("Error: no context found to generate preprocessing suggestions.")
+        return state
 
     # Extract context & prepare strings
     cols_str = ", ".join(context["columns"])
@@ -37,4 +40,7 @@ def suggest_preprocessing(df) -> str:
 
     formatted_prompt = prompt.format_messages(cols_str=cols_str, dtypes_str=dtypes_str, sample_str=sample_str)
     response = llm.invoke(formatted_prompt)
-    return str(response.content)
+    
+    # Update the state with the suggestion
+    state.set_preprocessing_suggestion(str(response.content))
+    return state

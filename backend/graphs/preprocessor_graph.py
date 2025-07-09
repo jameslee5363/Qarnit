@@ -1,5 +1,6 @@
-from langgraph.graph import StateGraph, START, END, MessagesState
-from agents.preprocessor import (
+from langgraph.graph import StateGraph, START, END
+from backend.agents.state import AppState
+from backend.agents.preprocessor import (
     inspect_df,
     suggest_preprocessing,
     check_relevance,
@@ -13,7 +14,7 @@ from agents.preprocessor import (
                                                           └──[is_relevant = False]─► END'''
 
 def build_preprocessor_graph():
-    builder = StateGraph(MessagesState)
+    builder = StateGraph(AppState)
     
     # Add preprocessing sub-agent nodes (node_name first, then function)
     builder.add_node("inspect_df", inspect_df)
@@ -31,7 +32,7 @@ def build_preprocessor_graph():
     builder.add_conditional_edges(
         "check_relevance",
         lambda state: "generate_code"
-        if state.get("parsed_relevance", {}).get("is_relevant")
+        if state.parsed_relevance and state.parsed_relevance.get("is_relevant")
         else END
     )
     

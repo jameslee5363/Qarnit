@@ -1,9 +1,9 @@
 from typing import Literal
 from langchain_core.messages import AIMessage
-from dataTools.sql_toolkit import make_sql_tools
+from backend.dataTools.sql_toolkit import make_sql_tools
 from langgraph.graph import END
-from config.llm_config import llm
-from config.db_config import db
+from backend.config.llm_config import llm
+from backend.config.db_config import db
 
 # prompt for checking queries
 _check_query_system_prompt = f"""
