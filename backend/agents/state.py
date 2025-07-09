@@ -63,3 +63,16 @@ class AppState(BaseModel):
 
     def record_extra(self, key: str, value: Any) -> None:
         self.extras[key] = value
+
+    def set_error(self, error_message: str) -> None:
+        """Set an error message in the state."""
+        self.data["error"] = error_message
+        self.messages.append({"role": "system", "content": f"Error: {error_message}"})
+
+    def has_error(self) -> bool:
+        """Check if there's an error in the state."""
+        return "error" in self.data and self.data["error"] is not None
+
+    def get_error(self) -> Optional[str]:
+        """Get the current error message."""
+        return self.data.get("error")

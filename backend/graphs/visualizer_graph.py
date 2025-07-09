@@ -1,68 +1,51 @@
 from langgraph.graph import StateGraph, START, END
-from langgraph.graph.message import MessagesState
-from typing import Dict, Any, List, Optional
-from langchain_core.messages import BaseMessage
-from typing_extensions import TypedDict
+from agents.state import AppState
 from agents.visualizer import (
-    inspect_data,
-    select_visualization_types,
+    inspect_dataframe,
     check_feasibility,
+    classify_visualization_type,
     prepare_visualization_data,
     generate_plots,
-    validate_plots,
 )
 
+'''Flow diagram:
+        START → inspect_dataframe → check_feasibility
+                                         ├──[viz_feasible = True]──► classify_visualization_type → prepare_visualization_data → generate_plots → END
+                                         └──[viz_feasible = False]─► END'''
 
-class VisualizerState(TypedDict):
-    """Custom state for visualizer graph that includes both messages and custom fields."""
-    messages: List[BaseMessage]
-    retrieved_df: Optional[Any]
-    initial_question: Optional[str]
-    data_description: Optional[str]
-    visualization_types: Optional[List[str]]
-    viz_feasibility: Optional[bool]
-    feasibility_details: Optional[Dict[str, Any]]
-    prepared_viz_data: Optional[Dict[str, Any]]
-    generated_plots: Optional[Dict[str, Any]]
-    plot_validation_results: Optional[Dict[str, Any]]
-    visualization_complete: Optional[bool]
-
-
-def route_after_feasibility(state: VisualizerState) -> str:
+def route_after_feasibility(state: AppState) -> str:
     """Determine if visualization should continue based on feasibility."""
-    return "prepare_visualization_data" if state.get("viz_feasibility") else END
+    return "classify_visualization_type" if state.data.get("viz_feasible") else END
 
 
 def build_visualizer_graph():
-    """Build the visualizer graph with proper state management and flow control."""
-    builder = StateGraph(VisualizerState)
+    """Build the visualizer graph following the same pattern as other agents."""
+    builder = StateGraph(AppState)
     
-    # Add visualizer sub-agent nodes
-    builder.add_node("inspect_data", inspect_data)
-    builder.add_node("select_visualization_types", select_visualization_types)
+    # Add visualizer sub-agent nodes (node_name first, then function)
+    builder.add_node("inspect_dataframe", inspect_dataframe)
     builder.add_node("check_feasibility", check_feasibility)
+    builder.add_node("classify_visualization_type", classify_visualization_type)
     builder.add_node("prepare_visualization_data", prepare_visualization_data)
     builder.add_node("generate_plots", generate_plots)
-    builder.add_node("validate_plots", validate_plots)
     
     # Wire the graph
-    builder.add_edge(START, "inspect_data")
-    builder.add_edge("inspect_data", "select_visualization_types")
-    builder.add_edge("select_visualization_types", "check_feasibility")
+    builder.add_edge(START, "inspect_dataframe")
+    builder.add_edge("inspect_dataframe", "check_feasibility")
     
-    # Conditional routing based on feasibility
+    # Only continue with visualization if feasible
     builder.add_conditional_edges(
         "check_feasibility",
         route_after_feasibility,
         {
-            "prepare_visualization_data": "prepare_visualization_data",
+            "classify_visualization_type": "classify_visualization_type",
             END: END
         }
     )
     
     # Continue with visualization pipeline
+    builder.add_edge("classify_visualization_type", "prepare_visualization_data")
     builder.add_edge("prepare_visualization_data", "generate_plots")
-    builder.add_edge("generate_plots", "validate_plots")
-    builder.add_edge("validate_plots", END)
+    builder.add_edge("generate_plots", END)
     
     return builder.compile()

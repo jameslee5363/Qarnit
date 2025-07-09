@@ -10,7 +10,7 @@ from agents.preprocessor import (
 
 '''Flow diagram:
         START → inspect_df → suggest_preprocessing → check_relevance
-                                                          ├──[is_relevant = True]──► generate_code → apply_preprocessing → END
+                                                          ├──[is_relevant = True]──► generate_code → assess_complexity (repeat the step of generate code if over limit with updated context on why)→ apply_preprocessing → END
                                                           └──[is_relevant = False]─► END'''
 
 def build_preprocessor_graph():

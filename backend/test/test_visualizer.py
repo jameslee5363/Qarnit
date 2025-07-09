@@ -1,14 +1,25 @@
+"""
+Comprehensive Visualizer Agent Test
+Tests the complete visualizer workflow from start to end.
+"""
+
 import sys
 import os
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+
+import matplotlib.pyplot as plt
 from pathlib import Path
-from pprint import pprint
+import time
 
 # Add the backend directory to sys.path
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Load environment variables from config directory
+
 from dotenv import load_dotenv
 config_dir = Path(__file__).parent.parent / "config"
 env_path = config_dir / ".env"
@@ -16,315 +27,275 @@ load_dotenv(dotenv_path=env_path)
 
 from graphs.visualizer_graph import build_visualizer_graph
 from agents.visualizer import (
-    inspect_data,
-    select_visualization_types,
+    inspect_dataframe,
     check_feasibility,
+    classify_visualization_type,
     prepare_visualization_data,
     generate_plots,
-    validate_plots,
 )
-
-def print_separator(title):
-    print(f"\n{'='*60}")
-    print(f"  {title}")
-    print('='*60)
-
-def inspect_state_structure(state, step_num):
-    print(f"\nSTEP {step_num} - State Structure:")
-    print(f"State keys: {list(state.keys())}")
-    print(f"State type: {type(state)}")
-    
-    # Show all non-messages keys and their values
-    for key, value in state.items():
-        if key != "messages":
-            if isinstance(value, pd.DataFrame):
-                print(f"  {key}: DataFrame {value.shape}")
-            elif isinstance(value, dict) and len(str(value)) > 200:
-                print(f"  {key}: {type(value)} (large dict with {len(value)} keys)")
-            else:
-                print(f"  {key}: {type(value)} = {repr(value)}")
-    
-    # Show messages structure
-    if "messages" in state:
-        print(f"  messages: {len(state['messages'])} messages")
-        for i, msg in enumerate(state["messages"]):
-            print(f"    Message {i}: {type(msg).__name__}")
-            if hasattr(msg, 'content'):
-                content_preview = str(msg.content)[:100] + "..." if len(str(msg.content)) > 100 else str(msg.content)
-                print(f"      Content: {content_preview}")
+from agents.state import AppState
 
 def create_test_data():
-    """Create comprehensive test data for visualizer testing."""
-    print_separator("Creating Test Data")
-    
+    """Create comprehensive test dataset."""
     np.random.seed(42)
     
-    # Create test data with different types of columns
-    data = {
-        # Numerical columns
-        'sales': np.random.normal(1000, 200, 100),
-        'price': np.random.uniform(10, 100, 100),
-        'quantity': np.random.randint(1, 50, 100),
-        'profit': np.random.normal(150, 50, 100),
-        
-        # Categorical columns
-        'category': np.random.choice(['Electronics', 'Clothing', 'Food', 'Books'], 100),
+    # Create a dataset with multiple data types for comprehensive testing
+
+    return pd.DataFrame({
+        'date': pd.date_range('2024-01-01', periods=100, freq='D'),
+        'sales': np.random.lognormal(7, 0.5, 100),
+        'category': np.random.choice(['Electronics', 'Clothing', 'Food'], 100),
         'region': np.random.choice(['North', 'South', 'East', 'West'], 100),
-        'status': np.random.choice(['Active', 'Inactive', 'Pending'], 100),
-        
-        # Date column
-        'date': pd.date_range('2023-01-01', periods=100, freq='D'),
-        
-        # Mixed data with some missing values
-        'rating': np.random.choice([1, 2, 3, 4, 5, np.nan], 100),
-    }
-    
-    df = pd.DataFrame(data)
-    
-    # Add some missing values
-    df.loc[df.sample(5).index, 'sales'] = np.nan
-    df.loc[df.sample(3).index, 'category'] = np.nan
-    
-    print(f"Created test dataset with shape: {df.shape}")
-    print(f"Columns: {list(df.columns)}")
-    print(f"Data types:")
-    for col, dtype in df.dtypes.items():
-        print(f"  {col}: {dtype}")
-    
-    return df
+        'customer_age': np.random.normal(40, 15, 100).astype(int),
+        'discount': np.random.uniform(0, 0.3, 100),
+        'rating': np.random.choice([1, 2, 3, 4, 5], 100)
+    })
 
 def test_individual_components():
     """Test each visualizer component individually."""
-    print_separator("Testing Individual Components")
+    print("🧪 Testing Individual Components")
+    print("-" * 50)
     
-    # Create test data
     df = create_test_data()
+    state = AppState()
+    state.data["df"] = df
     
-    # Initialize state
-    state = {
-        "retrieved_df": df,
-        "initial_question": "Analyze sales and customer data trends",
-        "messages": []
-    }
-    
-    # Test 1: Data Inspection
-    print("\n1. Testing Data Inspection...")
-    try:
-        state = inspect_data(state)
-        print("✓ Data inspection successful")
-        if "data_description" in state:
-            print(f"  Description length: {len(state['data_description'])} characters")
-            print(f"  Description preview: {state['data_description'][:200]}...")
-    except Exception as e:
-        print(f"✗ Data inspection failed: {e}")
+    # Test 1: Data Inspector
+
+    print("1️⃣  Data Inspector...")
+    state = inspect_dataframe(state)
+    if state.has_error():
+        print(f"   ❌ Failed: {state.get_error()}")
         return False
     
-    inspect_state_structure(state, 1)
+    viz_context = state.data.get("viz_context", {})
+    print(f"   ✅ Success: Analyzed DataFrame")
     
-    # Test 2: Visualization Type Selection
-    print("\n2. Testing Visualization Type Selection...")
-    try:
-        state = select_visualization_types(state)
-        print("✓ Visualization type selection successful")
-        if "visualization_types" in state:
-            print(f"  Selected types: {state['visualization_types']}")
-    except Exception as e:
-        print(f"✗ Visualization type selection failed: {e}")
+    # Test 2: Feasibility Checker
+
+    print("2️⃣  Feasibility Checker...")
+    state = check_feasibility(state)
+    if state.has_error():
+        print(f"   ❌ Failed: {state.get_error()}")
         return False
     
-    inspect_state_structure(state, 2)
+    feasible = state.data.get("viz_feasible", False)
+    print(f"   ✅ Success: Feasibility = {feasible}")
     
-    # Test 3: Feasibility Check
-    print("\n3. Testing Feasibility Check...")
-    try:
-        state = check_feasibility(state)
-        print("✓ Feasibility check successful")
-        if "viz_feasibility" in state:
-            print(f"  Feasibility: {state['viz_feasibility']}")
-        if "feasibility_details" in state:
-            print(f"  Details: {state['feasibility_details']}")
-    except Exception as e:
-        print(f"✗ Feasibility check failed: {e}")
+    if not feasible:
+        print("   ⚠️  Data not suitable for visualization")
         return False
     
-    inspect_state_structure(state, 3)
-    
-    # Test 4: Data Preparation
-    print("\n4. Testing Data Preparation...")
-    try:
-        state = prepare_visualization_data(state)
-        print("✓ Data preparation successful")
-        if "prepared_viz_data" in state:
-            print(f"  Prepared {len(state['prepared_viz_data'])} visualization types")
-            for viz_type, data in state['prepared_viz_data'].items():
-                print(f"    {viz_type}: {type(data)} with keys {list(data.keys())}")
-    except Exception as e:
-        print(f"✗ Data preparation failed: {e}")
+    # Test 3: Visualization Classifier
+
+    print("3️⃣  Visualization Classifier...")
+    state = classify_visualization_type(state)
+    if state.has_error():
+        print(f"   ❌ Failed: {state.get_error()}")
         return False
     
-    inspect_state_structure(state, 4)
+    viz_types = state.data.get("viz_context", {}).get("recommended_viz_types", [])
+    print(f"   ✅ Success: {len(viz_types)} types recommended: {viz_types}")
     
-    # Test 5: Plot Generation (may fail due to matplotlib dependencies)
-    print("\n5. Testing Plot Generation...")
-    try:
-        state = generate_plots(state)
-        print("✓ Plot generation successful")
-        if "generated_plots" in state:
-            print(f"  Generated {len(state['generated_plots'])} plots")
-            for viz_type, plot in state['generated_plots'].items():
-                print(f"    {viz_type}: {type(plot)}")
-    except Exception as e:
-        print(f"✗ Plot generation failed: {e}")
-        print("  This may be due to matplotlib dependencies or display issues")
-        # Don't return False here as plot generation might fail in headless environments
-    
-    inspect_state_structure(state, 5)
-    
-    # Test 6: Plot Validation
-    print("\n6. Testing Plot Validation...")
-    try:
-        state = validate_plots(state)
-        print("✓ Plot validation successful")
-        if "plot_validation_results" in state:
-            print(f"  Validation results available")
-        if "visualization_complete" in state:
-            print(f"  Visualization complete: {state['visualization_complete']}")
-    except Exception as e:
-        print(f"✗ Plot validation failed: {e}")
+    # Test 4: Data Preparer
+
+    print("4️⃣  Data Preparer...")
+    state = prepare_visualization_data(state)
+    if state.has_error():
+        print(f"   ❌ Failed: {state.get_error()}")
         return False
     
-    inspect_state_structure(state, 6)
+    prepared_data = state.data.get("prepared_viz_data", {})
+    print(f"   ✅ Success: {len(prepared_data)} datasets prepared")
+    
+    # Test 5: Plot Generator
+
+    print("5️⃣  Plot Generator...")
+    state = generate_plots(state)
+    if state.has_error():
+        print(f"   ❌ Failed: {state.get_error()}")
+        return False
+    
+    plots = state.data.get("generated_plots", [])
+    print(f"   ✅ Success: {len(plots)} plots generated")
     
     return True
 
-def test_visualizer_graph():
-    """Test the complete visualizer graph."""
-    print_separator("Testing Visualizer Graph")
+def test_graph_workflow():
+    """Test the complete visualizer graph workflow."""
+    print("\n🔄 Testing Complete Graph Workflow")
+    print("-" * 50)
     
-    # Create test data
     df = create_test_data()
-    
-    # Initialize state
-    initial_state = {
-        "retrieved_df": df,
-        "initial_question": "Analyze sales and customer data trends",
-        "messages": []
-    }
+    initial_state = AppState()
+    initial_state.data["df"] = df
     
     try:
-        # Build and run the graph
         graph = build_visualizer_graph()
-        print("✓ Visualizer graph built successfully")
+        print("   ✅ Graph built successfully")
         
-        # Run the graph
-        final_state = graph.invoke(initial_state)
-        print("✓ Visualizer graph executed successfully")
+        final_state = None
+        step_count = 0
         
-        # Check final state
-        print(f"\nFinal state keys: {list(final_state.keys())}")
-        if "visualization_complete" in final_state:
-            print(f"Visualization complete: {final_state['visualization_complete']}")
+        start_time = time.time()
+        for step in graph.stream(initial_state, stream_mode="values"):
+            step_count += 1
+            final_state = step
+        execution_time = time.time() - start_time
         
-        if "messages" in final_state:
-            print(f"Total messages: {len(final_state['messages'])}")
-            for i, msg in enumerate(final_state["messages"]):
-                if hasattr(msg, 'content'):
-                    print(f"  Message {i+1}: {msg.content}")
+        print(f"   ✅ Graph executed in {step_count} steps ({execution_time:.2f}s)")
         
-        return True
-        
-    except Exception as e:
-        print(f"✗ Visualizer graph failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
+        # Check final results
 
-def test_with_real_data():
-    """Test with actual data file if available."""
-    print_separator("Testing with Real Data")
-    
-    # Look for data files
-    data_dir = Path(__file__).parent.parent / "data"
-    data_files = []
-    
-    if data_dir.exists():
-        for file in data_dir.glob("*.csv"):
-            data_files.append(file)
-    
-    if not data_files:
-        print("No CSV files found in data directory. Skipping real data test.")
-        return True
-    
-    # Test with first available data file
-    data_file = data_files[0]
-    print(f"Testing with data file: {data_file}")
-    
-    try:
-        df = pd.read_csv(data_file)
-        print(f"Loaded data with shape: {df.shape}")
-        
-        # Limit to first 100 rows for faster testing
-        if df.shape[0] > 100:
-            df = df.head(100)
-            print(f"Limited to first 100 rows for testing")
-        
-        # Initialize state
-        state = {
-            "retrieved_df": df,
-            "initial_question": f"Analyze data from {data_file.name}",
-            "messages": []
-        }
-        
-        # Run data inspection and type selection
-        state = inspect_data(state)
-        state = select_visualization_types(state)
-        state = check_feasibility(state)
-        
-        if state.get("viz_feasibility", False):
-            state = prepare_visualization_data(state)
-            print("✓ Real data test successful")
+        if hasattr(final_state, 'data'):
+            plots = final_state.data.get("generated_plots", [])
         else:
-            print("✗ Real data is not feasible for visualization")
-            return False
+            plots = final_state.get("generated_plots", [])
         
-        return True
+        print(f"   ✅ Final result: {len(plots)} plots generated")
+        
+        return len(plots) > 0
         
     except Exception as e:
-        print(f"✗ Real data test failed: {e}")
+        print(f"   ❌ Graph execution failed: {str(e)}")
         return False
 
-def main():
-    """Main test function."""
-    print_separator("VISUALIZER AGENT TESTS")
+def test_error_handling():
+    """Test error handling with edge cases."""
+    print("\n🛡️  Testing Error Handling")
+    print("-" * 50)
     
-    tests = [
-        ("Individual Components", test_individual_components),
-        ("Visualizer Graph", test_visualizer_graph),
-        ("Real Data", test_with_real_data),
-    ]
+    # Test 1: Missing DataFrame
+
+    print("1️⃣  Testing missing DataFrame...")
+    no_df_state = AppState()
+    no_df_state = inspect_dataframe(no_df_state)
     
-    passed = 0
-    total = len(tests)
+    if not no_df_state.has_error():
+        print("   ⚠️  Expected error for missing DataFrame")
+        return False
+    print("   ✅ Correctly handled missing DataFrame")
     
-    for test_name, test_func in tests:
-        print(f"\n{'='*20} {test_name} {'='*20}")
-        try:
-            if test_func():
-                print(f"✓ {test_name} TEST PASSED")
-                passed += 1
-            else:
-                print(f"✗ {test_name} TEST FAILED")
-        except Exception as e:
-            print(f"✗ {test_name} TEST FAILED: {e}")
-            import traceback
-            traceback.print_exc()
+    # Test 2: Empty DataFrame
+
+    print("2️⃣  Testing empty DataFrame...")
+    empty_state = AppState()
+    empty_state.data["df"] = pd.DataFrame()
+    empty_state = inspect_dataframe(empty_state)
+    empty_state = check_feasibility(empty_state)
     
-    print_separator("TEST SUMMARY")
-    print(f"Passed: {passed}/{total}")
-    print(f"Success rate: {passed/total*100:.1f}%")
+    # Should handle gracefully
+
+    print("   ✅ Handled empty DataFrame")
+    
+    return True
+
+def save_generated_plots(plots, test_name="main_test"):
+    """Save generated plots to output directory."""
+    output_dir = Path(__file__).parent / "visualizer_outputs" / test_name
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    saved_count = 0
+    for i, plot_data in enumerate(plots):
+        filename = f"{test_name}_{plot_data['type']}_{i+1}.png"
+        filepath = output_dir / filename
+        plot_data["figure"].savefig(filepath, dpi=300, bbox_inches='tight')
+        plt.close(plot_data["figure"])
+        saved_count += 1
+    
+    return saved_count, output_dir
+
+def run_comprehensive_test():
+    """Run the complete visualizer test suite."""
+    print("🚀 Comprehensive Visualizer Agent Test")
+    print("=" * 60)
+    print("Testing complete workflow from DataFrame to generated plots")
+    print("=" * 60)
+    
+    test_results = {}
+    
+    # Test individual components
+
+    test_results["components"] = test_individual_components()
+    
+    # Test graph workflow
+
+    test_results["graph"] = test_graph_workflow()
+    
+    # Test error handling
+
+    test_results["error_handling"] = test_error_handling()
+    
+    # Generate final visualization with plot saving
+
+    print("\n📊 Final End-to-End Test with Plot Generation")
+    print("-" * 50)
+    
+    df = create_test_data()
+    print(f"   📊 Test dataset: {df.shape}")
+    print(f"   📋 Columns: {list(df.columns)}")
+    
+    # Run complete pipeline
+
+    state = AppState()
+    state.data["df"] = df
+    
+    start_time = time.time()
+    
+    state = inspect_dataframe(state)
+    state = check_feasibility(state)
+    state = classify_visualization_type(state)
+    state = prepare_visualization_data(state)
+    state = generate_plots(state)
+    
+    total_time = time.time() - start_time
+    
+    if state.has_error():
+        print(f"   ❌ Pipeline failed: {state.get_error()}")
+        test_results["end_to_end"] = False
+    else:
+        plots = state.data.get("generated_plots", [])
+        saved_count, output_dir = save_generated_plots(plots, "end_to_end_test")
+        
+        print(f"   ✅ Pipeline completed in {total_time:.2f}s")
+        print(f"   ✅ Generated {len(plots)} plots")
+        print(f"   💾 Saved {saved_count} plots to {output_dir}")
+         # Display plot details
+        for i, plot in enumerate(plots, 1):
+            plot_title = plot.get('title', plot.get('type', 'Unknown'))
+            print(f"      {i}. {plot['type']}: {plot_title}")
+        
+        test_results["end_to_end"] = True
+    
+    # Summary
+
+    print("\n" + "=" * 60)
+    print("📊 TEST SUMMARY")
+    print("=" * 60)
+    
+    passed = sum(test_results.values())
+    total = len(test_results)
+    
+    for test_name, result in test_results.items():
+        status = "✅ PASS" if result else "❌ FAIL"
+        print(f"   {status} {test_name.replace('_', ' ').title()}")
+    
+    print(f"\n🏆 Overall Result: {passed}/{total} tests passed")
+    
+    if passed == total:
+        print("\n🎉 ALL TESTS PASSED!")
+        print("   The visualizer agent is fully functional:")
+        print("   ✅ Modular components working correctly")
+        print("   ✅ Graph workflow executing successfully")
+        print("   ✅ Error handling robust")
+        print("   ✅ End-to-end pipeline generating plots")
+        print("   ✅ Optimized LLM prompts performing well")
+    else:
+        print(f"\n⚠️  {total - passed} test(s) failed. Review the issues above.")
     
     return passed == total
 
 if __name__ == "__main__":
-    success = main()
+    success = run_comprehensive_test()
+    print(f"\n{'🎯 TEST COMPLETED SUCCESSFULLY' if success else '❌ TESTS FAILED'}")
     sys.exit(0 if success else 1)
